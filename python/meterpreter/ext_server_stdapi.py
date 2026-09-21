@@ -890,6 +890,9 @@ def get_process_output(args):
         raise Exception(args[0] + ' exited with non-zero status')
     return str(stdout)
 
+def u32(v):
+    return int(v) & 0xFFFFFFFF
+
 def get_stat_buffer(path):
     si = os.stat(path)
     rdev = 0
@@ -901,8 +904,8 @@ def get_stat_buffer(path):
     # Meterpreter's stat wire format. Python 3.12+ on Windows reports a 64-bit
     # st_dev, which overflows struct.pack('I', ...), so mask to the low 32 bits
     # (the same truncation the native 32-bit _dev_t already applies).
-    st_buf = struct.pack('<III', int(si.st_dev) & 0xffffffff, int(si.st_mode), int(si.st_nlink))
-    st_buf += struct.pack('<IIIQ', int(si.st_uid), int(si.st_gid), int(rdev) & 0xffffffff, long(si.st_ino))
+    st_buf = struct.pack('<III', u32(si.st_dev), u32(si.st_mode), u32(si.st_nlink))
+    st_buf += struct.pack('<IIIQ', u32(si.st_uid), u32(si.st_gid), u32(rdev), long(si.st_ino))
     st_buf += struct.pack('<QQQQ', long(si.st_size), long(si.st_atime), long(si.st_mtime), long(si.st_ctime))
     return st_buf
 
